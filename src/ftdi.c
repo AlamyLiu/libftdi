@@ -2642,7 +2642,7 @@ int ftdi_eeprom_set_strings(struct ftdi_context *ftdi, char * manufacturer,
             strcpy(eeprom->manufacturer, manufacturer);
     }
 
-    if(product)
+    if (product)
     {
         if (eeprom->product)
             free (eeprom->product);
@@ -2662,6 +2662,7 @@ int ftdi_eeprom_set_strings(struct ftdi_context *ftdi, char * manufacturer,
             eeprom->use_serial = 1;
         }
     }
+
     return 0;
 }
 
