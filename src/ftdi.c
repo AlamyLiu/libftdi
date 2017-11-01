@@ -2633,9 +2633,6 @@ int ftdi_eeprom_set_strings(struct ftdi_context *ftdi, char * manufacturer,
 
     eeprom = ftdi->eeprom;
 
-    if (ftdi->usb_dev == NULL)
-        ftdi_error_return(-3, "No connected device or device not yet opened");
-
     if (manufacturer)
     {
         if (eeprom->manufacturer)
