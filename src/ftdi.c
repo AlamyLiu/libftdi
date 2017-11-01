@@ -68,8 +68,6 @@ static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
     {
         libusb_close (ftdi->usb_dev);
         ftdi->usb_dev = NULL;
-        if(ftdi->eeprom)
-            ftdi->eeprom->initialized_for_connected_device = 0;
     }
 }
 
@@ -2467,7 +2465,7 @@ int ftdi_set_error_char(struct ftdi_context *ftdi,
 }
 
 /**
-    Init eeprom with default values for the connected device
+    Init eeprom with default values.
     \param ftdi pointer to ftdi_context
     \param manufacturer String to use as Manufacturer
     \param product String to use as Product description
@@ -2476,7 +2474,6 @@ int ftdi_set_error_char(struct ftdi_context *ftdi,
     \retval  0: all fine
     \retval -1: No struct ftdi_context
     \retval -2: No struct ftdi_eeprom
-    \retval -3: No connected device or device not yet opened
 */
 int ftdi_eeprom_initdefaults(struct ftdi_context *ftdi, char * manufacturer,
                              char * product, char * serial)
@@ -2491,9 +2488,6 @@ int ftdi_eeprom_initdefaults(struct ftdi_context *ftdi, char * manufacturer,
 
     eeprom = ftdi->eeprom;
     memset(eeprom, 0, sizeof(struct ftdi_eeprom));
-
-    if (ftdi->usb_dev == NULL)
-        ftdi_error_return(-3, "No connected device or device not yet opened");
 
     eeprom->vendor_id = 0x0403;
     eeprom->use_serial = 1;
@@ -3385,7 +3379,6 @@ int ftdi_eeprom_build(struct ftdi_context *ftdi)
     output[eeprom->size-2] = checksum;
     output[eeprom->size-1] = checksum >> 8;
 
-    eeprom->initialized_for_connected_device = 1;
     return user_area_size;
 }
 /* Decode the encoded EEPROM field for the FTDI Mode into a value for the abstracted
@@ -4242,7 +4235,7 @@ int ftdi_set_eeprom_value(struct ftdi_context *ftdi, enum ftdi_eeprom_value valu
         default :
             ftdi_error_return(-1, "Request to unknown EEPROM value");
     }
-    ftdi->eeprom->initialized_for_connected_device = 0;
+
     return 0;
 }
 
@@ -4501,7 +4494,6 @@ int ftdi_write_eeprom_location(struct ftdi_context *ftdi, int eeprom_addr,
     \retval  0: all fine
     \retval -1: read failed
     \retval -2: USB device unavailable
-    \retval -3: EEPROM not initialized for the connected device;
 */
 int ftdi_write_eeprom(struct ftdi_context *ftdi)
 {
@@ -4511,10 +4503,6 @@ int ftdi_write_eeprom(struct ftdi_context *ftdi)
 
     if (ftdi == NULL || ftdi->usb_dev == NULL)
         ftdi_error_return(-2, "USB device unavailable");
-
-    if(ftdi->eeprom->initialized_for_connected_device == 0)
-        ftdi_error_return(-3, "EEPROM not initialized for the connected device");
-
     eeprom = ftdi->eeprom->buf;
 
     /* These commands were traced while running MProg */

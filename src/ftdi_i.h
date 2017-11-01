@@ -34,10 +34,6 @@ struct ftdi_eeprom
     /** product id */
     int product_id;
 
-    /** Was the eeprom structure initialized for the actual
-        connected device? **/
-    int initialized_for_connected_device;
-
     /** self powered */
     int self_powered;
     /** remote wakeup */
@@ -140,4 +136,3 @@ struct ftdi_eeprom
     /** device release number */
     int release_number;
 };
-
