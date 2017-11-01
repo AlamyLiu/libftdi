@@ -11,7 +11,7 @@
 #include <getopt.h>
 #include <ftdi.h>
 
-int read_decode_eeprom(struct ftdi_context *ftdi)
+int read_decode_eeprom(struct ftdi_context *ftdi, int verbose)
 {
     int i, j, f;
     int value;
@@ -27,8 +27,8 @@ int read_decode_eeprom(struct ftdi_context *ftdi)
     }
 
 
-    ftdi_get_eeprom_value(ftdi, CHIP_SIZE, & value);
-    if (value <0)
+    ftdi_get_eeprom_value(ftdi, CHIP_SIZE, &value);
+    if (value < 0)
     {
         fprintf(stderr, "No EEPROM found or EEPROM empty\n");
         fprintf(stderr, "On empty EEPROM, use -w option to write default values\n");
@@ -58,7 +58,7 @@ int read_decode_eeprom(struct ftdi_context *ftdi)
         fprintf(stdout,"\n");
     }
 
-    f = ftdi_eeprom_decode(ftdi, 1);
+    f = ftdi_eeprom_decode(ftdi, verbose);
     if (f < 0)
     {
         fprintf(stderr, "ftdi_eeprom_decode: %d (%s)\n",
@@ -80,6 +80,7 @@ int main(int argc, char **argv)
     int use_defaults = 0;
     int large_chip = 0;
     int do_write = 0;
+    int verbose = 0;
     int retval = 0;
     int value;
 
@@ -90,23 +91,30 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    while ((i = getopt(argc, argv, "d::ev:p:l:P:S:w")) != -1)
+    while ((i = getopt(argc, argv, "dlwebp:v:P:S:")) != -1)
     {
         switch (i)
         {
             case 'd':
                 use_defaults = 1;
-                if (optarg)
-                    large_chip = 0x66;
+                break;
+            case 'l':
+                large_chip = 0x66;
+                break;
+            case 'w':
+                do_write  = 1;
                 break;
             case 'e':
                 erase = 1;
                 break;
-            case 'v':
-                vid = strtoul(optarg, NULL, 0);
+            case 'b':
+                verbose = 1;
                 break;
             case 'p':
                 pid = strtoul(optarg, NULL, 0);
+                break;
+            case 'v':
+                vid = strtoul(optarg, NULL, 0);
                 break;
             case 'P':
                 desc = optarg;
@@ -114,16 +122,13 @@ int main(int argc, char **argv)
             case 'S':
                 serial = optarg;
                 break;
-            case 'w':
-                do_write  = 1;
-                break;
             default:
                 fprintf(stderr, "usage: %s [options]\n", *argv);
-                fprintf(stderr, "\t-d[num] Work with default valuesfor 128 Byte "
+                fprintf(stderr, "\t-d[num] Work with default values for 128 Byte "
                         "EEPROM or for 256 Byte EEPROM if some [num] is given\n");
                 fprintf(stderr, "\t-w write\n");
                 fprintf(stderr, "\t-e erase\n");
-                fprintf(stderr, "\t-v verbose decoding\n");
+                fprintf(stderr, "\t-l verbose decoding\n");
                 fprintf(stderr, "\t-p <number> Search for device with PID == number\n");
                 fprintf(stderr, "\t-v <number> Search for device with VID == number\n");
                 fprintf(stderr, "\t-P <string? Search for device with given "
@@ -163,7 +168,7 @@ int main(int argc, char **argv)
                     continue;
                 }
                 fprintf(stderr, "Decoded values of device %d:\n", i);
-                read_decode_eeprom(ftdi);
+                read_decode_eeprom(ftdi, verbose);
                 ftdi_usb_close(ftdi);
             }
             ftdi_list_free(&devlist);
@@ -200,11 +205,12 @@ int main(int argc, char **argv)
             fprintf(stderr, "\n");
             fprintf(stderr, "unable to open ftdi device: %d (%s)\n",
                     f, ftdi_get_error_string(ftdi));
-            
+
             retval = -1;
             goto done;
         }
     }
+
     if (erase)
     {
         f = ftdi_erase_eeprom(ftdi); /* needed to determine EEPROM chip type */
@@ -290,7 +296,7 @@ int main(int argc, char **argv)
             goto done;
         }
     }
-    retval = read_decode_eeprom(ftdi);
+    retval = read_decode_eeprom(ftdi, verbose);
 done:
     ftdi_usb_close(ftdi);
 do_deinit:
