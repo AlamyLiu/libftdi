@@ -4220,7 +4220,7 @@ int ftdi_set_eeprom_value(struct ftdi_context *ftdi, enum ftdi_eeprom_value valu
             ftdi->eeprom->flow_control = value;
             break;
         case CHIP_SIZE:
-            ftdi_error_return(-2, "EEPROM Value can't be changed");
+            ftdi->eeprom->size = value;
             break;
         case EXTERNAL_OSCILLATOR:
             ftdi->eeprom->external_oscillator = value;
